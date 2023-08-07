@@ -262,7 +262,11 @@ public class Cows_and_Bulls {
 			if (num <= 0) {
 				num = null;
 			}
-			//System.out.println(num);
+			else {
+				System.out.println("Guess limit is: " + num);
+				System.out.println();
+			}
+			//
 			this.setLimit(num);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
