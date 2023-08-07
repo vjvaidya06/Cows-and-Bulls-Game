@@ -5,7 +5,7 @@ Cows and Bulls is a word game similar to Wordle. A word is picked, and you guess
 
 LAN PLAY INSTRUCTIONS
 To play this with friends, you have to be on the same network (unless you choose to port forward). The person who creates the word is the server, they must select the option first. The person who guesses the word is the client. They should select the option after the server has already been started. Port must be the same between the two. As for IP, the person creating the word needs to find their IPv4 address and the person guessing needs to input it (If you're playing in two different windows on the same computer, the default configuration localhost should work just fine). On Windows, type "ipconfig" in cmd or powershell, and the IPv4 will be under Wifi or Ethernet.
-![image](https://github.com/vjvaidya06/Cows-and-Bulls-Game/assets/108746579/5211efdf-3223-4204-a0ca-d923c50c40ee)
+ ![image](https://github.com/vjvaidya06/Cows-and-Bulls-Game/assets/108746579/5211efdf-3223-4204-a0ca-d923c50c40ee)
 
 On Linux go into the terminal and type hostname -I. If this doesn't work, type ifconfig.
 
