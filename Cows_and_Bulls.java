@@ -1,9 +1,8 @@
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.Collections;
-
+import java.net.*;
 /**
  * This class is made to play a game of cows and bulls. It needs EnglishDictionary.txt and ComEngWords.txt to be accessible to function properly.
  * @author Vvaidya
@@ -16,6 +15,13 @@ public class Cows_and_Bulls {
 	private Scanner scan;
 	private int numguesses = 0;
 	private Integer limit = null;
+	private String ip = "127.0.0.1";
+	private int port = 3333;
+	private ServerSocket server;
+	private Socket client;
+	private PrintWriter out;
+    private BufferedReader in;
+    boolean online = false;
 	
 	/**
 	 * This constructor takes both text files and feeds them into the
@@ -70,12 +76,11 @@ public class Cows_and_Bulls {
 	 */
 	public void findWord(int length) {
 		Collections.shuffle(engdict);
-		boolean correctsize = false;
 		String randword = null;
-		for (int i = 1; i < engdict.size() && correctsize == false; i++) {
+		for (int i = 1; i < engdict.size(); i++) {
 			if (engdict.get(i).length() == length) {
 				randword = engdict.get(i);
-				correctsize = true;
+				break;
 			}
 		}
 		
@@ -159,9 +164,124 @@ public class Cows_and_Bulls {
 	 * Sets the number guesses allowed before you lose.
 	 * @param newlimit the number guesses allowed before you lose
 	 */
-	public void setLimit(int newlimit) {
+	public void setLimit(Integer newlimit) {
 		limit = newlimit;
 	}
+	
+	/**
+	 * Sets Port
+	 * @param newport the new port
+	 */
+	public void setPort(int newport) {
+		port = newport;
+	}
+	
+	/**
+	 * Sets IP
+	 * @param newip the new IP
+	 */
+	public void setIP(String newip) {
+		ip = newip;
+	}
+	
+	public void chooseInit() {
+		//server
+		String word;
+		System.out.println("Server started, waiting for client");
+		try {
+			server = new ServerSocket(port);
+			//server.setReuseAddress(true);
+			client = server.accept();
+			out = new PrintWriter(client.getOutputStream(), true);
+			in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+			online = true;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("Client Connected");
+		String ans;
+		while (true) {
+			System.out.println("Type the word");
+			ans = scan.nextLine().toLowerCase();
+			if (engdict.contains(ans)) {
+				break;
+			}
+			else {
+				System.out.println("That is not a valid word");
+			}
+		}
+		out.println(ans);
+		System.out.println("Type the guess limit, type a negative number to leave it unlimited.");
+		out.println(Integer.parseInt(scan.nextLine()));
+		try {
+			ans = in.readLine();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println(ans);
+		String ans2 = "a";
+		while (!ans.equals("Word was guessed correctly") && !ans.equals("Guess Limit was Exceeded. Terminating connection.")) {
+			try {
+				ans2 = in.readLine();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if (!ans2.equals(ans) && !ans2.equals(null)) {
+				System.out.println(ans2);
+				ans = ans2;
+			}
+		}
+		
+		
+	}
+	
+	public void guessInit() {
+		//client
+		System.out.println("Searching for server");
+		online = true;
+		try {
+			client = new Socket(ip, port);
+			out = new PrintWriter(client.getOutputStream(), true);
+	        in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Connection Failed, check IP and port");
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			//out.println("Client Connected");
+			System.out.println("Found Server");
+			this.manualSetWord(in.readLine());
+			Integer num = Integer.parseInt(in.readLine());
+			if (num <= 0) {
+				num = null;
+			}
+			//System.out.println(num);
+			this.setLimit(num);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void stopServer() {
+        try {
+			in.close();
+			out.close();
+	        client.close();
+	        server.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+	
 	
 	/**
 	 * Plays the game
@@ -173,6 +293,9 @@ public class Cows_and_Bulls {
 		while((!guess.equals(word) && !guess.equals("!") && limitexceeded == false)) {
 			System.out.println("The word is " + word.length() + " letters long. (Enter ! to exit)");
 			guess = scan.nextLine();
+			if (online) {
+				out.println("Guess was " + guess);
+			}
 			int[] cowsbulls = new int[2];
 			if (!guess.equals("!")) {
 				System.out.println("The word you entered is " + guess);
@@ -184,6 +307,7 @@ public class Cows_and_Bulls {
 					System.out.println("The word was " + word);
 					System.out.println();
 				}
+				this.stopServer();
 			}
 			if (this.isValid(guess)) {
 				cowsbulls = this.numCowsandBulls(guess);
@@ -192,12 +316,23 @@ public class Cows_and_Bulls {
 				if (cowsbulls[0] == word.length()) {
 					System.out.println("You got the word correct!");
 				}
+				if (online) {
+					out.println(cowsbulls[0] + " bulls");
+					out.println(cowsbulls[1] + " cows");
+					if (cowsbulls[0] == word.length()) {
+						out.println("Word was guessed correctly");
+					}
+				}
 				numguesses++;
 				//System.out.println(numguesses);
 				//System.out.println(limit);
 				if (limit != null) {
 					if (numguesses >= limit) {
 						System.out.println("You have exceeded the guess limit");
+						if (online) {
+							out.println("Guess Limit was Exceeded. Terminating connection.");
+							this.stopServer();
+						}
 						System.out.println("Press y to view the word, press anything else to continue.");
 						ans = scan.nextLine();
 						if (ans.toLowerCase().equals("y")) {
@@ -210,6 +345,9 @@ public class Cows_and_Bulls {
 			}
 			else if (!guess.equals("!")) {
 				System.out.println("That word either isn't a valid English word or was not the correct length.");
+				if (online) {
+					out.println("Word either isn't a valid English word or isn't the correct length");
+				}
 			}
 		}
 	}
@@ -218,15 +356,18 @@ public class Cows_and_Bulls {
 
 		// TODO Auto-generated method stub
 		Cows_and_Bulls game = new Cows_and_Bulls();
+		//game.stopServer();
 		Scanner scan = new Scanner(System.in);
 		String ans = "aaaaaaaaaa";
 		String guess = null;
 		Integer limit = null;
+		String message;
+		//int port =
 		while (!ans.equals("!")) {
 			boolean limitexceeded = false;
 			int numguesses = 0;
 			System.out.println("Cows and Bulls");
-			System.out.println("Type 1 for singleplayer, 2 for multiplayer, l to set a guess limit, desc for info on the game, and ! to quit.");
+			System.out.println("Type 1 for singleplayer, 2 for multiplayer, 3 for lan play, l to set a guess limit, desc for info on the game, and ! to quit.");
 			ans = scan.nextLine();
 			ans = ans.toLowerCase();
 			if (ans.equals("l")) {
@@ -284,12 +425,12 @@ public class Cows_and_Bulls {
 						wordfound = true;
 						
 					}
-					if (ans.equals("2")) {
+					else if (ans.equals("2")) {
 						game.findWordC(size);
 						wordfound = true;
 						
 					}
-					if (ans.equals("desc")) {
+					else if (ans.equals("desc")) {
 						System.out.println("Number 1 will search the regular dictionary.");
 						System.out.println("This option is much harder, since there are many obscure words you will likely run into.");
 						System.out.println();
@@ -299,6 +440,33 @@ public class Cows_and_Bulls {
 					if (wordfound) {
 						game.play();
 					}
+				}
+			}
+			if (ans.equals("3")) {
+				System.out.println("Would you like to create the word or guess it? Type 1 for create, and 2 for guess");
+				ans = scan.nextLine().toLowerCase();
+				if (ans.equals("1")) {
+					System.out.println("Change Port? Default is and 3333 [Y/n]");
+					ans = scan.nextLine().toLowerCase();
+					if (ans.equals("y")) {
+						System.out.println("Set Port");
+						game.setPort(Integer.parseInt(scan.nextLine()));
+					}
+					game.chooseInit();
+					//Add a while loop that keeps checking messages until the client wins or loses
+					
+				}
+				else if (ans.equals("2")) {
+					System.out.println("Change IP and port? Defaults are 127.0.0.1 (localhost) and 3333 [Y/n]");
+					ans = scan.nextLine().toLowerCase();
+					if (ans.equals("y")) {
+						System.out.println("Set IP");
+						game.setIP(scan.nextLine());
+						System.out.println("Set Port");
+						game.setPort(Integer.parseInt(scan.nextLine()));
+					}
+					game.guessInit();
+					game.play();
 				}
 			}
 		}
