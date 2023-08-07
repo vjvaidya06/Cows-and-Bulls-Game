@@ -9,12 +9,12 @@ To play this with friends, you have to be on the same network (unless you choose
 
 On Linux go into the terminal and type hostname -I. If this doesn't work, type ifconfig.
 
-\n![image](https://github.com/vjvaidya06/Cows-and-Bulls-Game/assets/108746579/22f0174f-d6aa-443d-80ad-1b71b090886f)
+ ![image](https://github.com/vjvaidya06/Cows-and-Bulls-Game/assets/108746579/22f0174f-d6aa-443d-80ad-1b71b090886f)
 
 
 On Mac, it can be found in settings under network labeled "IP Address".
 
-\n![image](https://github.com/vjvaidya06/Cows-and-Bulls-Game/assets/108746579/425150b2-54bb-4a0e-8221-872fe0ab0ef5)
+ ![image](https://github.com/vjvaidya06/Cows-and-Bulls-Game/assets/108746579/425150b2-54bb-4a0e-8221-872fe0ab0ef5)
 ![image](https://github.com/vjvaidya06/Cows-and-Bulls-Game/assets/108746579/f16749c0-3cda-4352-8f4e-2ea1cc49cf91)
 
 Once you are connected, server will get a message that the client has connected. After that, the server needs to type in the word and the guess limit (or a negative number if you wish to leave it unlimited). Once that is done the client can begin guessing. The client's guesses will also be sent to the server.
